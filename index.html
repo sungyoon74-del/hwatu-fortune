@@ -1,0 +1,395 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎴 화투 운세 — 오늘의 점괘</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-dark:    #0e0a1a;
+      --bg-card:    #1a1230;
+      --gold:       #d4a843;
+      --gold-light: #f0c96a;
+      --purple:     #7b5ea7;
+      --purple-dark:#4a3570;
+      --text:       #e8dfc8;
+      --text-dim:   #9a8f78;
+      --glow:       rgba(212,168,67,0.35);
+    }
+    body {
+      min-height: 100vh;
+      background: var(--bg-dark);
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(123,94,167,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(212,168,67,0.10) 0%, transparent 60%);
+      font-family: 'Noto Serif KR', 'Malgun Gothic', serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 60px;
+    }
+    header { text-align: center; margin-bottom: 32px; }
+    header .title-icon { font-size: 2.6rem; display: block; margin-bottom: 8px; }
+    header h1 { font-size: 2rem; font-weight: 700; color: var(--gold); text-shadow: 0 0 20px var(--glow); letter-spacing: 0.06em; }
+    header .subtitle { margin-top: 6px; font-size: 0.9rem; color: var(--text-dim); letter-spacing: 0.08em; }
+    .date-badge { display: inline-block; margin-top: 14px; padding: 4px 18px; border: 1px solid var(--purple); border-radius: 20px; font-size: 0.82rem; color: var(--purple); letter-spacing: 0.05em; }
+    .divider { width: 220px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 22px auto; opacity: 0.45; }
+    .instruction { text-align: center; font-size: 0.92rem; color: var(--text-dim); max-width: 380px; line-height: 1.75; margin-bottom: 28px; }
+    .instruction strong { color: var(--gold-light); }
+    #card-area { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 32px; }
+    .card-slot { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .card-label { font-size: 0.75rem; color: var(--purple); letter-spacing: 0.1em; }
+    .card-wrap { width: 110px; height: 160px; perspective: 900px; cursor: pointer; }
+    .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.4,0,0.2,1); }
+    .card-wrap.flipped .card-inner { transform: rotateY(180deg); }
+    .card-face { position: absolute; inset: 0; border-radius: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; user-select: none; }
+    .card-back { background: linear-gradient(145deg, #1f1440 0%, #2a1a55 100%); border: 2px solid var(--purple-dark); box-shadow: 0 4px 24px rgba(0,0,0,0.6), inset 0 0 30px rgba(123,94,167,0.12); }
+    .card-back::before { content: ''; position: absolute; inset: 8px; border: 1px solid rgba(212,168,67,0.25); border-radius: 7px; }
+    .card-back-icon { font-size: 2.8rem; opacity: 0.7; }
+    .card-back-text { font-size: 0.65rem; color: rgba(212,168,67,0.45); letter-spacing: 0.2em; margin-top: 6px; }
+    .card-front { transform: rotateY(180deg); border: 2px solid; box-shadow: 0 6px 28px rgba(0,0,0,0.5); padding: 8px; text-align: center; flex-direction: column; gap: 4px; }
+    .card-front .c-month { font-size: 0.65rem; letter-spacing: 0.1em; font-weight: 600; }
+    .card-front .c-emoji { font-size: 2.8rem; line-height: 1; }
+    .card-front .c-symbol { font-size: 1.4rem; }
+    .card-front .c-name { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; }
+    .card-front .c-type { font-size: 0.62rem; padding: 2px 8px; border-radius: 10px; background: rgba(0,0,0,0.3); letter-spacing: 0.08em; }
+    .type-광 .card-front { border-color: var(--gold); background: linear-gradient(145deg,#1e1500,#2c1e00); color: var(--gold-light); }
+    .type-광 .card-front .c-type { color: var(--gold); border: 1px solid var(--gold); }
+    .type-띠 .card-front { border-color: #c0392b; background: linear-gradient(145deg,#1e0500,#300a00); color: #f0a090; }
+    .type-띠 .card-front .c-type { color: #e05040; border: 1px solid #c0392b; }
+    .type-피 .card-front { border-color: #3a6a3a; background: linear-gradient(145deg,#0d1a0d,#142014); color: #a0d0a0; }
+    .type-피 .card-front .c-type { color: #6aaf6a; border: 1px solid #3a6a3a; }
+    .card-wrap:not(.flipped):hover .card-inner { transform: rotateY(10deg) translateY(-4px); }
+    .card-wrap:not(.flipped):hover .card-back { box-shadow: 0 8px 32px rgba(123,94,167,0.5), inset 0 0 30px rgba(123,94,167,0.2); }
+    .btn { padding: 12px 32px; border-radius: 8px; border: none; font-family: inherit; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.06em; cursor: pointer; transition: all 0.2s; }
+    .btn-primary { background: linear-gradient(135deg, var(--purple-dark), var(--purple)); color: var(--gold-light); box-shadow: 0 4px 18px rgba(123,94,167,0.4); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(123,94,167,0.55); }
+    .btn-gold { background: linear-gradient(135deg, #a07828, var(--gold)); color: #1a1000; box-shadow: 0 4px 18px rgba(212,168,67,0.3); }
+    .btn-gold:hover { transform: translateY(-2px); }
+    .btn-outline { background: transparent; border: 1px solid var(--purple); color: var(--purple); }
+    .btn-outline:hover { background: rgba(123,94,167,0.15); }
+    #btn-area { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 32px; }
+    #result-panel { display: none; max-width: 680px; width: 100%; animation: fadeUp 0.6s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    .result-header { text-align: center; margin-bottom: 24px; }
+    .result-header h2 { font-size: 1.4rem; color: var(--gold); text-shadow: 0 0 16px var(--glow); }
+    .result-header p { font-size: 0.85rem; color: var(--text-dim); margin-top: 6px; }
+    .card-summaries { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+    .card-summary { flex: 1 1 160px; background: var(--bg-card); border-radius: 10px; padding: 14px; border-left: 3px solid var(--gold); min-width: 140px; }
+    .card-summary .cs-role { font-size: 0.68rem; color: var(--purple); letter-spacing: 0.1em; margin-bottom: 4px; }
+    .card-summary .cs-name { font-size: 0.95rem; font-weight: 600; color: var(--gold-light); }
+    .card-summary .cs-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+    .fortune-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    @media (max-width: 480px) { .fortune-grid { grid-template-columns: 1fr; } }
+    .fortune-block { background: var(--bg-card); border-radius: 12px; padding: 18px; border: 1px solid rgba(212,168,67,0.12); transition: border-color 0.2s; }
+    .fortune-block:hover { border-color: rgba(212,168,67,0.3); }
+    .fortune-block .fb-icon { font-size: 1.4rem; margin-bottom: 8px; display: block; }
+    .fortune-block .fb-title { font-size: 0.78rem; font-weight: 600; color: var(--gold); letter-spacing: 0.1em; margin-bottom: 8px; }
+    .fortune-block .fb-text { font-size: 0.87rem; line-height: 1.8; color: var(--text); }
+    .fortune-block.full { grid-column: 1 / -1; }
+    .stars { color: var(--gold); font-size: 1rem; margin-bottom: 6px; }
+    .advice-box { background: linear-gradient(135deg, rgba(74,53,112,0.5), rgba(30,20,60,0.5)); border: 1px solid var(--purple-dark); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; text-align: center; }
+    .advice-box .ab-title { font-size: 0.78rem; color: var(--purple); letter-spacing: 0.15em; margin-bottom: 10px; }
+    .advice-box .ab-text { font-size: 1rem; line-height: 1.9; color: var(--text); font-style: italic; }
+    .advice-box .ab-text::before, .advice-box .ab-text::after { content: '"'; color: var(--gold); font-size: 1.3rem; font-style: normal; }
+    .lucky-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 28px; }
+    .lucky-item { background: rgba(212,168,67,0.08); border: 1px solid rgba(212,168,67,0.25); border-radius: 8px; padding: 8px 16px; font-size: 0.8rem; color: var(--gold-light); text-align: center; }
+    .lucky-item .li-label { font-size: 0.65rem; color: var(--text-dim); display: block; margin-bottom: 2px; letter-spacing: 0.1em; }
+    .action-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(212,168,67,0.3); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    footer { margin-top: 48px; font-size: 0.72rem; color: rgba(154,143,120,0.5); text-align: center; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+<header>
+  <span class="title-icon">🎴</span>
+  <h1>화투 운세</h1>
+  <p class="subtitle">전통 화투로 보는 오늘의 점괘</p>
+  <div class="date-badge" id="date-badge">오늘</div>
+</header>
+<div class="divider"></div>
+<p class="instruction" id="main-instr">
+  마음을 가다듬고 눈을 잠시 감으세요.<br>
+  준비가 되면 <strong>패 뽑기</strong> 버튼을 누르고,<br>
+  세 장의 패를 하나씩 천천히 뒤집어보세요.
+</p>
+<div id="card-area">
+  <div class="card-slot">
+    <span class="card-label">현재 · 상황</span>
+    <div class="card-wrap" id="card-0" onclick="flipCard(0)" style="pointer-events:none">
+      <div class="card-inner">
+        <div class="card-face card-back"><span class="card-back-icon">🎴</span><span class="card-back-text">화 · 투</span></div>
+        <div class="card-face card-front"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card-slot">
+    <span class="card-label">조언 · 주의</span>
+    <div class="card-wrap" id="card-1" onclick="flipCard(1)" style="pointer-events:none">
+      <div class="card-inner">
+        <div class="card-face card-back"><span class="card-back-icon">🎴</span><span class="card-back-text">화 · 투</span></div>
+        <div class="card-face card-front"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card-slot">
+    <span class="card-label">결과 · 전망</span>
+    <div class="card-wrap" id="card-2" onclick="flipCard(2)" style="pointer-events:none">
+      <div class="card-inner">
+        <div class="card-face card-back"><span class="card-back-icon">🎴</span><span class="card-back-text">화 · 투</span></div>
+        <div class="card-face card-front"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="btn-area">
+  <button class="btn btn-primary" id="btn-draw" onclick="drawCards()">🎴 패 뽑기</button>
+</div>
+<div id="result-panel"></div>
+<footer>✦ 전통 화투점 ✦ 오락 목적으로 제작되었습니다 ✦</footer>
+<script>
+const HWATU = (() => {
+  const months = [
+    {num:1, name:'솔', full:'소나무', emoji:'🌲', symbol:'🦅'},
+    {num:2, name:'매화', full:'매화', emoji:'🌸', symbol:'🐦'},
+    {num:3, name:'벚꽃', full:'벚꽃', emoji:'🌺', symbol:'🎏'},
+    {num:4, name:'등', full:'등나무', emoji:'💜', symbol:'🐓'},
+    {num:5, name:'창포', full:'창포', emoji:'🌷', symbol:'🌉'},
+    {num:6, name:'모란', full:'모란', emoji:'🌹', symbol:'🦋'},
+    {num:7, name:'싸리', full:'싸리', emoji:'🍃', symbol:'🐗'},
+    {num:8, name:'공산', full:'억새', emoji:'🌾', symbol:'🌕'},
+    {num:9, name:'국화', full:'국화', emoji:'🌼', symbol:'🍶'},
+    {num:10, name:'단풍', full:'단풍', emoji:'🍁', symbol:'🦌'},
+    {num:11, name:'버들', full:'버드나무', emoji:'🌿', symbol:'🌧️'},
+    {num:12, name:'오동', full:'오동나무', emoji:'🦜', symbol:'✨'},
+  ];
+  const configs = [
+    ['광','띠','피','피'],['띠','피','피','피'],['광','띠','피','피'],
+    ['띠','피','피','피'],['띠','띠','피','피'],['띠','피','피','피'],
+    ['띠','띠','피','피'],['광','피','피','피'],['띠','피','피','피'],
+    ['띠','피','피','피'],['광','띠','피','피'],['광','피','피','피'],
+  ];
+  const cards = [];
+  months.forEach((m, mi) => {
+    configs[mi].forEach((type, ci) => {
+      cards.push({id:mi*4+ci, month:m.num, monthName:m.name, flowerFull:m.full, emoji:m.emoji, symbol:m.symbol, type});
+    });
+  });
+  return cards;
+})();
+
+const FORTUNES = {
+  1:{
+    '광':{overall:'학이 하늘을 날 듯 운세가 드높습니다. 오랫동안 준비해온 일이 마침내 빛을 발할 때입니다. 망설이지 말고 첫발을 내딛으세요.',love:'신뢰를 바탕으로 한 깊은 인연이 찾아옵니다. 솔직한 마음을 표현하면 좋은 결실이 맺힐 것입니다.',money:'꾸준함이 재물을 부릅니다. 예상치 못한 수입도 기대됩니다.',health:'소나무처럼 강건한 기운이 넘칩니다. 꾸준한 운동이 건강을 더욱 단단히 해줄 것입니다.',advice:'소나무는 눈보라에도 꺾이지 않느니라. 어떤 어려움이 와도 뿌리를 굳건히 내리고 있으면 봄은 반드시 온다.',stars:5,lucky_color:'초록',lucky_number:'1, 8',lucky_direction:'동쪽'},
+    '띠':{overall:'안정적인 흐름 속에서 서서히 상승하는 운세입니다. 지금 하는 일에 충실하면 좋은 기회가 자연스럽게 찾아옵니다.',love:'서두르지 않는 것이 최선입니다. 상대방의 마음을 기다리는 여유가 오히려 좋은 결과를 낳습니다.',money:'수입은 안정적이나 큰 변동은 없습니다. 절약하고 내실을 다지는 것이 중요합니다.',health:'무리하지 않는 것이 좋습니다. 규칙적인 생활 습관을 지키세요.',advice:'절개 있는 소나무가 사철 푸름을 자랑하듯, 한결같은 마음이 결국 복을 부른다.',stars:4,lucky_color:'흰색',lucky_number:'3, 6',lucky_direction:'북쪽'},
+    '피':{overall:'잔잔한 일상이 계속됩니다. 현재의 소중함을 느끼며 감사하는 하루가 될 것입니다.',love:'작은 관심이 큰 감동을 줍니다. 현재의 관계를 더욱 깊게 가꾸세요.',money:'수입과 지출이 균형을 이루는 시기입니다. 충동구매를 자제하세요.',health:'피로가 쌓이기 쉬운 날입니다. 충분한 수면과 스트레칭으로 몸을 달래주세요.',advice:'작은 씨앗이 큰 나무가 되듯, 오늘 하루의 작은 노력이 먼 훗날 울창한 숲이 된다.',stars:3,lucky_color:'베이지',lucky_number:'5',lucky_direction:'서쪽'}
+  },
+  2:{
+    '띠':{overall:'매화가 추위를 이기고 꽃을 피우듯 인내의 결실이 눈앞에 왔습니다. 포기하지 않은 당신에게 봄바람이 불어옵니다.',love:'기다려온 사람과의 만남이 성사될 수 있습니다. 먼저 손을 내미는 용기를 가져보세요.',money:'이전의 노력이 드디어 결실을 맺기 시작합니다.',health:'차가운 기운에 주의하세요. 따뜻하게 입고 다니세요.',advice:'추위 속에서도 꽃을 피우는 매화처럼, 험난한 시절을 견딘 사람만이 진짜 아름다움을 알 수 있느니라.',stars:4,lucky_color:'분홍',lucky_number:'2, 7',lucky_direction:'남쪽'},
+    '피':{overall:'기다림의 시간입니다. 아직 때가 무르익지 않았으니 서두르기보다 준비에 집중하세요.',love:'짝사랑 중이라면 조금 더 지켜보세요. 상대방의 마음이 서서히 열리고 있습니다.',money:'큰 지출은 자제하세요. 필요한 것과 원하는 것을 구분하는 지혜가 필요합니다.',health:'목과 폐를 따뜻이 하세요. 따뜻한 차 한 잔이 보약입니다.',advice:'봄이 오지 않는 겨울은 없느니라. 지금은 씨앗이 땅속에서 조용히 힘을 키우는 때다.',stars:3,lucky_color:'연보라',lucky_number:'4',lucky_direction:'동남'}
+  },
+  3:{
+    '광':{overall:'벚꽃처럼 화려한 전성기가 펼쳐집니다! 지금이 바로 당신이 빛날 수 있는 절호의 기회입니다. 과감하게 도전하세요.',love:'눈부신 만남이 예고됩니다. 마음에 드는 사람에게 용감하게 고백해 보세요.',money:'뜻밖의 행운이 찾아올 수 있습니다. 적극적인 활동이 수입으로 연결됩니다.',health:'활력이 넘칩니다. 야외 활동이 몸과 마음을 상쾌하게 해줄 것입니다.',advice:'벚꽃은 짧지만 강렬하게 피어나느니라. 지금 이 순간을 온전히 살아가는 것이 최고의 지혜다.',stars:5,lucky_color:'핑크',lucky_number:'3, 8',lucky_direction:'남쪽'},
+    '띠':{overall:'사람들의 주목을 받는 시기입니다. 자신감을 갖고 행동하면 좋은 평판이 따라옵니다.',love:'매력이 넘치는 시기입니다. 자연스럽게 어울리다 보면 좋은 인연을 만날 수 있습니다.',money:'협력과 거래에서 이득이 생깁니다.',health:'봄철 알레르기에 주의하세요.',advice:'만발한 꽃길에는 모두가 걷고 싶어하느니라. 지금 함께하는 사람들을 소중히 여기거라.',stars:4,lucky_color:'흰색',lucky_number:'1, 5',lucky_direction:'동쪽'},
+    '피':{overall:'화려함보다 내실을 다질 때입니다.',love:'감정이 흔들리기 쉬운 날입니다. 차분하게 마음을 정리하세요.',money:'과소비 주의! 예쁜 것, 갖고 싶은 것이 많아지는 날이지만 지갑은 닫아두세요.',health:'과로를 조심하세요.',advice:'꽃이 지고 나면 열매가 맺히느니라. 화려한 겉모습보다 알찬 내면을 가꾸어라.',stars:3,lucky_color:'연두',lucky_number:'6',lucky_direction:'남동'}
+  },
+  4:{
+    '띠':{overall:'끈기 있게 이어온 노력이 서서히 결실을 맺고 있습니다.',love:'인연의 줄이 이어지고 있습니다. 오래 알던 사람과 감정이 깊어질 수 있습니다.',money:'장기적인 투자가 빛을 발합니다.',health:'혈액순환에 신경 쓰세요. 가벼운 스트레칭이 도움이 됩니다.',advice:'등나무는 홀로 서지 않고 의지할 것을 찾느니라. 도움을 요청하는 것이 약함이 아니라 지혜다.',stars:4,lucky_color:'보라',lucky_number:'4, 9',lucky_direction:'북서'},
+    '피':{overall:'조급함을 버리고 자연스러운 흐름에 맡겨보세요.',love:'서두르면 오히려 멀어집니다.',money:'투자보다는 저축이 현명합니다.',health:'어깨와 등이 뻐근하다면 스트레칭을 해주세요.',advice:'천천히 올라가는 등나무가 결국 담장을 덮느니라. 조급함은 가장 큰 적이다.',stars:3,lucky_color:'연보라',lucky_number:'2',lucky_direction:'서쪽'}
+  },
+  5:{
+    '띠':{overall:'강인한 의지와 결단력으로 막혀있던 길이 열립니다. 오래 고민하던 결정을 내릴 적기입니다.',love:'망설이지 말고 마음을 표현하세요. 용기 있는 사람에게 사랑의 여신이 웃어줍니다.',money:'경쟁에서 앞설 수 있는 좋은 기운입니다.',health:'활기차고 에너지가 넘칩니다.',advice:'창포의 향이 나쁜 기운을 물리치듯, 강한 마음이 모든 어려움을 몰아내느니라.',stars:5,lucky_color:'파랑',lucky_number:'5, 0',lucky_direction:'동쪽'},
+    '피':{overall:'실력을 갈고닦기에 좋은 시기입니다.',love:'자신을 가꾸는 데 집중하세요.',money:'기술을 배우는 데 투자하세요. 미래를 위한 준비가 가장 큰 재산입니다.',health:'수분 섭취를 충분히 하세요.',advice:'단단한 뿌리가 큰 풍랑도 이겨내느니라.',stars:3,lucky_color:'청록',lucky_number:'8',lucky_direction:'북쪽'}
+  },
+  6:{
+    '띠':{overall:'부귀영화의 기운이 넘칩니다. 사회적 지위나 명예와 관련된 좋은 소식이 들려올 것입니다.',love:'풍요로운 사랑이 찾아옵니다.',money:'재물운이 강합니다. 사업 확장이나 투자에 좋은 기회가 생길 수 있습니다.',health:'과식을 주의하고 균형 잡힌 식사를 유지하세요.',advice:'모란은 꽃 중의 왕이니라. 스스로의 가치를 알고 당당하게 행동하거라.',stars:5,lucky_color:'빨강',lucky_number:'6, 9',lucky_direction:'남쪽'},
+    '피':{overall:'겉으로는 화려해 보이나 내실을 다져야 할 시기입니다.',love:'서로의 솔직한 감정을 확인하는 것이 필요합니다.',money:'수입은 있으나 지출도 많습니다. 불필요한 소비를 줄이세요.',health:'혈압과 심장 건강에 유의하세요.',advice:'화려한 꽃 뒤에 가시가 있듯이, 좋아 보이는 것에 함부로 손을 뻗지 말거라.',stars:3,lucky_color:'금색',lucky_number:'3',lucky_direction:'남동'}
+  },
+  7:{
+    '띠':{overall:'소박하지만 진실한 행복이 있는 날입니다.',love:'자연스러운 만남이 최고입니다. 꾸밈없는 모습이 오히려 매력적으로 보입니다.',money:'알뜰하게 모은 돈이 빛을 발합니다.',health:'야외 활동과 자연 속에서 에너지를 충전하세요.',advice:'싸리꽃은 작아도 온 들판을 가득 채우느니라. 작은 것들이 모여 큰 아름다움을 이룬다.',stars:4,lucky_color:'초록',lucky_number:'7',lucky_direction:'동북'},
+    '피':{overall:'평범한 하루지만 그 속에 감사할 것들이 많습니다.',love:'안정된 관계를 유지하세요.',money:'작은 돈을 잘 관리하세요. 티끌 모아 태산입니다.',health:'무리하지 말고 충분한 휴식을 취하세요.',advice:'들판의 잡초처럼 억세게, 들꽃처럼 순박하게 살아가거라.',stars:3,lucky_color:'갈색',lucky_number:'2, 5',lucky_direction:'서쪽'}
+  },
+  8:{
+    '광':{overall:'보름달처럼 환한 기운이 모든 것을 비춰줍니다. 오래 답답했던 상황이 밝혀지고 진실이 드러날 것입니다.',love:'서로의 마음이 달빛처럼 선명하게 보이는 시기입니다.',money:'지혜롭게 관리하면 재물이 늘어납니다.',health:'정신적 건강에 신경 쓰세요. 명상이나 요가가 마음의 평화를 가져다줍니다.',advice:'보름달은 어둠을 두려워하지 않느니라. 밝은 마음으로 세상을 바라보면 길이 보인다.',stars:5,lucky_color:'은색',lucky_number:'8, 15',lucky_direction:'서쪽'},
+    '피':{overall:'성찰과 관조의 시간이 필요합니다. 바쁜 일상에서 잠시 멈추고 자신을 돌아보세요.',love:'혼자만의 시간도 중요합니다.',money:'현상 유지에 초점을 맞추세요.',health:'가을 환절기를 조심하세요.',advice:'달이 차면 기우는 이치를 알아야 하느니라. 욕심을 비울 때 비로소 진짜 것들이 채워진다.',stars:3,lucky_color:'회색',lucky_number:'4',lucky_direction:'서북'}
+  },
+  9:{
+    '띠':{overall:'학문과 지식에서 기쁨이 찾아옵니다. 공부나 자기계발에 투자하면 훗날 큰 보람이 됩니다.',love:'지적인 대화를 나눌 수 있는 사람과의 인연이 깊어집니다.',money:'전문성을 살린 부업이나 투자가 좋습니다.',health:'국화차 한 잔처럼 몸과 마음을 정화하는 시간이 필요합니다.',advice:'국화는 늦게 피되 오래 가느니라. 서두르지 않고 깊이 공부한 사람이 결국 가장 멀리 간다.',stars:4,lucky_color:'노랑',lucky_number:'9',lucky_direction:'동쪽'},
+    '피':{overall:'지금 하는 일에 꾸준히 정진하세요.',love:'좋은 친구가 좋은 연인이 됩니다.',money:'소소한 절약이 큰 도움이 됩니다.',health:'눈 건강에 신경 쓰세요.',advice:'술 한 잔에 달 하나씩 잠기듯, 하루하루 작은 기쁨을 찾아 누리며 살거라.',stars:3,lucky_color:'노란색',lucky_number:'1, 6',lucky_direction:'남쪽'}
+  },
+  10:{
+    '띠':{overall:'결실의 계절입니다. 그동안 노력한 것들이 하나둘 결과를 보여주기 시작합니다.',love:'성숙한 감정이 관계를 깊게 합니다. 단풍처럼 깊어지는 사랑을 경험할 것입니다.',money:'투자한 것들이 수확기를 맞습니다.',health:'건강 검진을 받아보는 것이 좋습니다.',advice:'단풍은 가장 아름다울 때 낙엽이 되느니라. 아름다운 마무리가 새로운 시작의 씨앗이다.',stars:4,lucky_color:'주황',lucky_number:'10',lucky_direction:'남서'},
+    '피':{overall:'마무리와 정리가 필요한 시기입니다. 미뤄두었던 일들을 깔끔히 마무리하세요.',love:'연락이 뜸해진 소중한 사람에게 먼저 연락해 보세요.',money:'묵혀둔 돈이 있다면 지금 정리하세요.',health:'면역력 관리에 신경 쓰세요.',advice:'낙엽 하나하나가 모여 비옥한 흙이 되느니라. 모든 경험은 당신을 더 풍요롭게 만든다.',stars:3,lucky_color:'갈색',lucky_number:'3',lucky_direction:'서쪽'}
+  },
+  11:{
+    '광':{overall:'비 온 뒤에 땅이 굳듯, 힘들었던 시기가 지나고 새로운 국면이 펼쳐집니다.',love:'감성적인 만남이 예고됩니다. 비 내리는 날의 만남처럼 오래 기억될 인연이 시작될 수 있습니다.',money:'감성적 소비에 주의하세요.',health:'감기를 조심하세요.',advice:'버드나무는 바람에 휘어도 꺾이지 않느니라. 유연한 마음이 어떤 시련도 이겨낸다.',stars:4,lucky_color:'파랑',lucky_number:'11',lucky_direction:'북쪽'},
+    '띠':{overall:'감수성이 높아지는 시기입니다. 예술이나 창작 활동에서 좋은 영감을 얻을 수 있습니다.',love:'감정 기복이 있을 수 있습니다. 충동적인 결정보다 차분하게 생각하세요.',money:'새로운 아이디어가 수익으로 이어질 수 있습니다.',health:'우울한 감정이 들 수 있습니다. 햇빛 아래 산책이 도움이 됩니다.',advice:'빗속에서도 제비는 날아다니느니라. 힘든 환경이 오히려 강인한 사람을 만든다.',stars:3,lucky_color:'남색',lucky_number:'7',lucky_direction:'동북'},
+    '피':{overall:'조용한 하루가 될 것입니다. 차분히 자신을 돌아보는 시간을 가져보세요.',love:'이별의 아픔이 있을 수도 있지만, 더 좋은 만남으로 가는 길임을 믿으세요.',money:'예상치 못한 지출이 생길 수 있습니다.',health:'갑작스러운 날씨 변화가 건강에 영향을 줄 수 있습니다.',advice:'빗소리에 귀를 기울이면 하늘의 목소리가 들리느니라. 고요함 속에 지혜가 있다.',stars:2,lucky_color:'회색',lucky_number:'4',lucky_direction:'서쪽'}
+  },
+  12:{
+    '광':{overall:'봉황이 깃드는 오동나무처럼 대운이 찾아왔습니다! 올 한 해를 마무리하며 새로운 시작을 준비하기에 최고의 운세입니다.',love:'운명적인 만남이 기다리고 있습니다. 인생을 함께할 중요한 인연이 다가올 수 있습니다.',money:'큰 행운이 깃들 수 있습니다. 기회가 왔을 때 과감하게 잡으세요.',health:'겨울철 보온에 특히 신경 쓰세요.',advice:'봉황은 오동나무 아니면 앉지 않는다 하였느니라. 당신이 있어야 할 곳과 만나야 할 사람이 반드시 있다.',stars:5,lucky_color:'금색',lucky_number:'12, 1',lucky_direction:'남쪽'},
+    '피':{overall:'한 해의 마무리를 잘 지어야 할 때입니다. 감사함을 전하고 관계를 정리하며 새 출발을 준비하세요.',love:'오래된 인연에 감사하는 마음을 전해보세요.',money:'연말 결산을 잘 하세요. 내년을 위한 재정 계획을 세우세요.',health:'무리한 연말 일정을 자제하세요.',advice:'묵은 해가 가고 새 해가 오듯, 마음의 묵은 때도 깨끗이 씻어내고 새로이 시작하거라.',stars:4,lucky_color:'보라',lucky_number:'9',lucky_direction:'동쪽'}
+  }
+};
+
+function renderStars(n){ return '★'.repeat(n)+'☆'.repeat(5-n); }
+
+function setDateBadge(){
+  const now=new Date();
+  const days=['일','월','화','수','목','금','토'];
+  document.getElementById('date-badge').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${days[now.getDay()]}요일)`;
+}
+
+let drawnCards=[], flippedCount=0;
+
+function getFortune(card){
+  const mf=FORTUNES[card.month];
+  if(!mf) return FORTUNES[1]['피'];
+  return mf[card.type]||mf['피']||Object.values(mf)[0];
+}
+
+function drawCards(){
+  const btn=document.getElementById('btn-draw');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>점괘를 읽는 중...';
+  flippedCount=0;
+  document.getElementById('result-panel').style.display='none';
+  document.getElementById('result-panel').innerHTML='';
+  const shuffled=[...HWATU].sort(()=>Math.random()-0.5);
+  drawnCards=shuffled.slice(0,3);
+  drawnCards.forEach((card,i)=>{
+    const wrap=document.getElementById(`card-${i}`);
+    wrap.classList.remove('flipped','type-광','type-띠','type-피');
+    wrap.classList.add(`type-${card.type}`);
+    const sym=card.type==='광'?card.symbol:(card.type==='띠'?'🎀':'🍃');
+    wrap.querySelector('.card-front').innerHTML=`
+      <span class="c-month">${card.month}월 · ${card.monthName}</span>
+      <span class="c-emoji">${card.emoji}</span>
+      <span class="c-symbol">${sym}</span>
+      <span class="c-name">${card.flowerFull}</span>
+      <span class="c-type">${card.type}</span>`;
+    wrap.style.pointerEvents=i===0?'auto':'none';
+  });
+  setTimeout(()=>{
+    btn.disabled=false;
+    btn.innerHTML='🎴 패 뽑기';
+    document.getElementById('main-instr').innerHTML='패가 준비되었습니다.<br><strong>왼쪽 패부터</strong> 차례로 클릭해서 뒤집어보세요!';
+  },1200);
+}
+
+function flipCard(index){
+  if(index!==flippedCount) return;
+  const wrap=document.getElementById(`card-${index}`);
+  wrap.classList.add('flipped');
+  wrap.style.pointerEvents='none';
+  flippedCount++;
+  if(flippedCount<3){
+    setTimeout(()=>{document.getElementById(`card-${flippedCount}`).style.pointerEvents='auto';},400);
+  } else {
+    setTimeout(showFortune,700);
+  }
+}
+
+function showFortune(){
+  const panel=document.getElementById('result-panel');
+  const f0=getFortune(drawnCards[0]);
+  const f1=getFortune(drawnCards[1]);
+  const f2=getFortune(drawnCards[2]);
+  const avgStars=Math.round((f0.stars+f1.stars+f2.stars)/3);
+  const ri=n=>Math.floor(Math.random()*n);
+  const lf=getFortune(drawnCards[ri(3)]);
+  const mf2=getFortune(drawnCards[ri(3)]);
+  const hf=getFortune(drawnCards[ri(3)]);
+  panel.style.display='block';
+  panel.innerHTML=`
+    <div class="result-header">
+      <h2>✨ 오늘의 점괘 ✨</h2>
+      <p>오늘 당신의 운세는 <span class="stars">${renderStars(avgStars)}</span> (${avgStars}성)입니다.</p>
+    </div>
+    <div class="card-summaries">
+      ${drawnCards.map((c,i)=>{
+        const roles=['현재 상황','조언 · 주의','결과 · 전망'];
+        const f=getFortune(c);
+        return `<div class="card-summary"><div class="cs-role">${roles[i]}</div><div class="cs-name">${c.emoji} ${c.flowerFull} ${c.type}</div><div class="cs-sub">${c.month}월패 · ${renderStars(f.stars)}</div></div>`;
+      }).join('')}
+    </div>
+    <div class="fortune-grid">
+      <div class="fortune-block">
+        <span class="fb-icon">🍀</span><div class="fb-title">전체운</div>
+        <div class="stars">${renderStars(f0.stars)}</div>
+        <div class="fb-text">${f0.overall}</div>
+      </div>
+      <div class="fortune-block">
+        <span class="fb-icon">💕</span><div class="fb-title">연애운</div>
+        <div class="stars">${renderStars(lf.stars)}</div>
+        <div class="fb-text">${lf.love}</div>
+      </div>
+      <div class="fortune-block">
+        <span class="fb-icon">💰</span><div class="fb-title">재물운</div>
+        <div class="stars">${renderStars(mf2.stars)}</div>
+        <div class="fb-text">${mf2.money}</div>
+      </div>
+      <div class="fortune-block">
+        <span class="fb-icon">🌿</span><div class="fb-title">건강운</div>
+        <div class="stars">${renderStars(hf.stars)}</div>
+        <div class="fb-text">${hf.health}</div>
+      </div>
+      <div class="fortune-block full">
+        <span class="fb-icon">🔮</span><div class="fb-title">오늘의 흐름 (조언 + 전망)</div>
+        <div class="fb-text">${f1.overall}<br><br>${f2.overall}</div>
+      </div>
+    </div>
+    <div class="advice-box">
+      <div class="ab-title">✦ 할머니의 한 말씀 ✦</div>
+      <div class="ab-text">${f0.advice}</div>
+    </div>
+    <div class="lucky-row">
+      <div class="lucky-item"><span class="li-label">행운의 색</span>${f2.lucky_color}</div>
+      <div class="lucky-item"><span class="li-label">행운의 숫자</span>${f2.lucky_number}</div>
+      <div class="lucky-item"><span class="li-label">행운의 방향</span>${f2.lucky_direction}</div>
+    </div>
+    <div class="action-row">
+      <button class="btn btn-outline" onclick="copyFortune()">📋 운세 복사하기</button>
+      <button class="btn btn-gold" onclick="resetGame()">🎴 다시 뽑기</button>
+    </div>`;
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copyFortune(){
+  const f0=getFortune(drawnCards[0]);
+  const now=new Date();
+  const text=[
+    `🎴 화투 운세 — ${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`,
+    ``,
+    `현재: ${drawnCards[0].emoji} ${drawnCards[0].flowerFull} ${drawnCards[0].type}패`,
+    `조언: ${drawnCards[1].emoji} ${drawnCards[1].flowerFull} ${drawnCards[1].type}패`,
+    `전망: ${drawnCards[2].emoji} ${drawnCards[2].flowerFull} ${drawnCards[2].type}패`,
+    ``,
+    `✨ 할머니의 한 말씀`,
+    f0.advice,
+    ``,
+    `💡 행운: ${getFortune(drawnCards[2]).lucky_color} | ${getFortune(drawnCards[2]).lucky_number} | ${getFortune(drawnCards[2]).lucky_direction}`,
+  ].join('\n');
+  navigator.clipboard.writeText(text).then(()=>{alert('운세가 클립보드에 복사되었습니다! 💫');}).catch(()=>{alert('복사에 실패했습니다.');});
+}
+
+function resetGame(){
+  drawnCards=[]; flippedCount=0;
+  document.getElementById('result-panel').style.display='none';
+  document.getElementById('main-instr').innerHTML='마음을 가다듬고 눈을 잠시 감으세요.<br>준비가 되면 <strong>패 뽑기</strong> 버튼을 누르고,<br>세 장의 패를 하나씩 천천히 뒤집어보세요.';
+  for(let i=0;i<3;i++){
+    const w=document.getElementById(`card-${i}`);
+    w.classList.remove('flipped','type-광','type-띠','type-피');
+    w.style.pointerEvents='none';
+    w.querySelector('.card-front').innerHTML='';
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+setDateBadge();
+</script>
+</body>
+</html>
